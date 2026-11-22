@@ -1,0 +1,2 @@
+import { roadmap } from '../data/roadmap';
+export function Roadmap(){return <section className="section" id="roadmap"><div className="container"><div className="section-heading"><div><p className="eyebrow">WHERE WE'RE GOING</p><h2>Roadmap</h2></div></div><div className="roadmap">{roadmap.map(item=><article className={`roadmap-item roadmap-${item.phase}`} key={item.phase}><div className="timeline-dot"/><div className="roadmap-phase">{item.phase}</div><div><h3>{item.title}</h3><p>{item.description}</p></div></article>)}</div></div></section>}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>try{const t=localStorage.getItem('nexus-theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark')}catch(e){document.documentElement.dataset.theme='dark'}</script>
+    <title>GitWeb is live! — Nexus</title>
+    <link rel="stylesheet" href="/src/index.css" />
+  </head>
+  <body>
+    <main class="detail-page">
+      <div class="detail-toolbar"><a class="back-link" href="./#announcements">← Back to announcements</a><label for="language-select">Language</label><select id="language-select" aria-label="Announcement language"></select><button class="theme-toggle icon-button" id="standalone-theme-toggle" type="button" aria-label="Switch to Light Mode" title="Light Mode"><span aria-hidden="true">☀</span></button></div>
+      <article class="detail-page-card">
+        <p class="eyebrow">LATEST DROP · ANNOUNCEMENT · NOV 21, 2026</p>
+        <h1 id="announcement-title">GitWeb <span class="gradient-text">is live!</span></h1>
+        <p id="announcement-text">We, as Nexus, are introducing GitWeb to you. A platform for forums about your upcoming opensource project or Nexus use. Be the first to know the newest information of the DAY!</p>
+      </article>
+    </main>
+    <script>
+      const translations = {
+        en: { title: 'GitWeb is live!', text: 'We, as Nexus, are introducing GitWeb to you. A platform for forums about your upcoming opensource project or Nexus use. Be the first to know the newest information of the DAY!' },
+        fr: { title: 'GitWeb est en ligne !', text: 'Nous, chez Nexus, vous présentons GitWeb. Une plateforme de forums dédiée à votre prochain projet open source ou à votre utilisation de Nexus. Soyez les premiers à découvrir les toutes dernières informations du JOUR !' },
+        de: { title: 'GitWeb ist live!', text: 'Wir von Nexus stellen Ihnen GitWeb vor. Eine Plattform für Foren rund um Ihr kommendes Open-Source-Projekt oder die Nutzung von Nexus. Erfahren Sie als Erste die neuesten Informationen des TAGES!' },
+        es: { title: '¡GitWeb ya está disponible!', text: 'Nosotros, como Nexus, te presentamos GitWeb. Una plataforma de foros sobre tu próximo proyecto de código abierto o el uso de Nexus. ¡Sé el primero en conocer la información más nueva del DÍA!' },
+        it: { title: 'GitWeb è online!', text: 'Noi, in Nexus, ti presentiamo GitWeb. Una piattaforma di forum dedicata al tuo prossimo progetto open source o all’utilizzo di Nexus. Sii il primo a conoscere le ultime informazioni del GIORNO!' },
+        pl: { title: 'GitWeb jest już dostępny!', text: 'My, Nexus, przedstawiamy Ci GitWeb. Platformę z forumami dotyczącymi Twojego nadchodzącego projektu open source lub korzystania z Nexus. Dowiedz się jako pierwszy najnowszych informacji dnia!' },
+        nl: { title: 'GitWeb is live!', text: 'Wij van Nexus introduceren GitWeb voor jou. Een platform met forums over je aankomende open source-project of het gebruik van Nexus. Wees als eerste op de hoogte van het nieuwste nieuws van DE DAG!' },
+        pt: { title: 'O GitWeb está disponível!', text: 'Nós, da Nexus, apresentamos o GitWeb a você. Uma plataforma de fóruns sobre seu próximo projeto de código aberto ou o uso da Nexus. Seja o primeiro a conhecer as novidades mais recentes do DIA!' },
+        cs: { title: 'GitWeb je online!', text: 'My z Nexus vám představujeme GitWeb. Platformu s fóry o vašem nadcházejícím open source projektu nebo o používání Nexus. Buďte první, kdo se dozví nejnovější informace dne!' },
+        ro: { title: 'GitWeb este live!', text: 'Noi, de la Nexus, vă prezentăm GitWeb. O platformă de forumuri despre viitorul proiect open source sau despre utilizarea Nexus. Fiți primul care află cele mai noi informații ale ZILEI!' }
+      };
+      const names = { en: 'English', fr: 'Français', de: 'Deutsch', es: 'Español', it: 'Italiano', pl: 'Polski', nl: 'Nederlands', pt: 'Português', cs: 'Čeština', ro: 'Română' };
+      const select = document.getElementById('language-select');
+      Object.entries(names).forEach(([code, name]) => select.add(new Option(name, code)));
+      const browserCode = navigator.language.slice(0, 2);
+      const savedCode = localStorage.getItem('nexus-language');
+      const initial = savedCode && translations[savedCode] ? savedCode : translations[browserCode] ? browserCode : 'en';
+      function applyLanguage(code) {
+        const translation = translations[code];
+        document.documentElement.lang = code;
+        document.getElementById('announcement-title').innerHTML = 'GitWeb ' + '<span class="gradient-text">' + (code === 'en' ? 'is live!' : translation.title.replace(/^GitWeb\s*/i, '')) + '</span>';
+        document.getElementById('announcement-text').textContent = translation.text;
+        select.value = code;
+        localStorage.setItem('nexus-language', code);
+      }
+      select.addEventListener('change', (event) => applyLanguage(event.target.value));
+      applyLanguage(initial);
+
+      const themeToggle = document.getElementById('standalone-theme-toggle');
+      function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('nexus-theme', theme);
+        const isLight = theme === 'light';
+        themeToggle.querySelector('span').textContent = isLight ? '☾' : '☀';
+        themeToggle.setAttribute('aria-label', isLight ? 'Switch to Night Mode' : 'Switch to Light Mode');
+        themeToggle.title = isLight ? 'Night Mode' : 'Light Mode';
+      }
+      themeToggle.addEventListener('click', () => {
+        applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+      });
+      applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
+    </script>
+  </body>
+</html>
