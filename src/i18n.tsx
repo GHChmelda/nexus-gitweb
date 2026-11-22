@@ -510,8 +510,7 @@ const localeCodes = Object.keys(locales) as Locale[];
 function getStoredLocale(): Locale {
   const saved = localStorage.getItem('nexus-language');
   if (saved && localeCodes.includes(saved as Locale)) return saved as Locale;
-  const browserLocale = navigator.language.slice(0, 2) as Locale;
-  return localeCodes.includes(browserLocale) ? browserLocale : 'en';
+  return 'en';
 }
 
 type I18nValue = {

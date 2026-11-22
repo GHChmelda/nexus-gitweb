@@ -32,9 +32,8 @@
       const names = { en: 'English', fr: 'Français', de: 'Deutsch', es: 'Español', it: 'Italiano', pl: 'Polski', nl: 'Nederlands', pt: 'Português', cs: 'Čeština', ro: 'Română' };
       const select = document.getElementById('language-select');
       Object.entries(names).forEach(([code, name]) => select.add(new Option(name, code)));
-      const browserCode = navigator.language.slice(0, 2);
       const savedCode = localStorage.getItem('nexus-language');
-      const initial = savedCode && translations[savedCode] ? savedCode : translations[browserCode] ? browserCode : 'en';
+      const initial = savedCode && translations[savedCode] ? savedCode : 'en';
       function applyLanguage(code) {
         const translation = translations[code];
         document.documentElement.lang = code;
