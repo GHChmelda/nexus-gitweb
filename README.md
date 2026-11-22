@@ -19,6 +19,10 @@ Update `src/data/site.ts`, `src/data/announcements.ts`, `src/data/projects.ts`, 
 
 Set `newsletterEndpoint` in `src/data/site.ts` to a POST-capable endpoint. The form submits JSON containing `{ "email": "..." }`. Leave it empty to show GitHub and Discord buttons instead.
 
+## Community forum
+
+The Forum section links to this repository's GitHub Discussions. Discussions persist across visits and require a GitHub account to post. Manage topics and moderation in the repository's **Discussions** tab.
+
 ## GitHub Pages
 
 1. Push this project to the repository's `main` branch.
