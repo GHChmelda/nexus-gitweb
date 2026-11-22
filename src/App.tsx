@@ -8,9 +8,11 @@ import { Newsletter } from './components/Newsletter';
 import { Footer } from './components/Footer';
 import { useTheme } from './hooks/useTheme';
 import { useState } from 'react';
+import { I18nProvider, useI18n } from './i18n';
 
-export default function App() {
+function SiteApp() {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
   const [notificationPrompt, setNotificationPrompt] = useState(() => !localStorage.getItem('nexus-notification-choice'));
 
   const chooseNotification = (choice: string) => {
@@ -18,5 +20,9 @@ export default function App() {
     setNotificationPrompt(false);
   };
 
-  return <><a className="skip-link" href="#main">Skip to content</a><Nav theme={theme} toggleTheme={toggleTheme}/><main id="main"><Hero/><Announcements/><Projects/><Roadmap/><About/><Newsletter/></main><Footer/>{notificationPrompt && <div className="notification-backdrop" role="presentation"><section className="notification-modal" role="dialog" aria-modal="true" aria-labelledby="notification-title"><p className="eyebrow">STAY UPDATED</p><h2 id="notification-title">Wanna be notified?</h2><p>Choose how you'd like to hear about new Nexus releases and updates.</p><div className="notification-actions"><button type="button" className="button button-primary notification-answer notification-yes" onClick={() => chooseNotification('yes')}>Yes, thanks</button><button type="button" className="button button-secondary notification-answer notification-no" onClick={() => chooseNotification('no')}>No, thanks</button><button type="button" className="button button-secondary notification-answer notification-later" onClick={() => chooseNotification('later')}>I'll think about it, thanks</button></div></section></div>}</>;
+  return <><a className="skip-link" href="#main">{t('skip')}</a><Nav theme={theme} toggleTheme={toggleTheme}/><main id="main"><Hero/><Announcements/><Projects/><Roadmap/><About/><Newsletter/></main><Footer/>{notificationPrompt && <div className="notification-backdrop" role="presentation"><section className="notification-modal" role="dialog" aria-modal="true" aria-labelledby="notification-title"><p className="eyebrow">{t('stayUpdated')}</p><h2 id="notification-title">{t('notifyTitle')}</h2><p>{t('notifyDescription')}</p><div className="notification-actions"><button type="button" className="button button-primary notification-answer notification-yes" onClick={() => chooseNotification('yes')}>{t('yesThanks')}</button><button type="button" className="button button-secondary notification-answer notification-no" onClick={() => chooseNotification('no')}>{t('noThanks')}</button><button type="button" className="button button-secondary notification-answer notification-later" onClick={() => chooseNotification('later')}>{t('thinkThanks')}</button></div></section></div>}</>;
+}
+
+export default function App() {
+  return <I18nProvider><SiteApp/></I18nProvider>;
 }

@@ -1,0 +1,535 @@
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+export const locales = {
+  en: 'English',
+  fr: 'Français',
+  de: 'Deutsch',
+  es: 'Español',
+  it: 'Italiano',
+  pl: 'Polski',
+  nl: 'Nederlands',
+  pt: 'Português',
+  cs: 'Čeština',
+  ro: 'Română',
+} as const;
+
+export type Locale = keyof typeof locales;
+type ContentCopy = {
+  ui: Record<string, string>;
+  announcements: Record<string, { title: string; summary: string }>;
+  projects: Record<string, { tagline: string; description: string }>;
+  roadmap: Record<string, string>;
+};
+
+const en: ContentCopy = {
+  ui: {
+    skip: 'Skip to content', home: 'Nexus GitWeb home', nav: 'Primary navigation',
+    announcements: 'Announcements', projects: 'Projects', roadmap: 'Roadmap', about: 'About',
+    github: 'GitHub', menu: 'Toggle menu', heroEyebrow: 'OPEN-SOURCE DEVELOPER PLATFORM',
+    heroLine1: 'Build in the open.', heroLine2: 'Ship what matters.',
+    heroDescription: 'Tools for ambitious builders. Explore the work, follow the releases, and help shape the next generation of developer software.',
+    explore: 'Explore projects', viewGithub: 'View on GitHub', shareProject: 'Share Project',
+    statsProjects: 'Projects', statsUpdates: 'Updates', statsOpen: 'Open source',
+    latestDrop: 'LATEST DROP', readReleaseNotes: 'Read release notes',
+    fromLab: 'FROM THE LAB', announcementHeading: 'Announcements', filterLabel: 'Filter announcements',
+    all: 'All', announcement: 'Announcement', release: 'Release', update: 'Update', event: 'Event',
+    pinned: 'Pinned', readAnnouncement: 'Read', work: 'THE WORK', projectHeading: 'Projects',
+    projectNote: 'Built in public. Maintained together.', live: 'Live', beta: 'Beta',
+    building: 'Building', planned: 'Planned', communityProjects: 'COMMUNITY PROJECTS',
+    shareHeading: 'Share Project', shareDescription: 'Add a public GitHub repository to Nexus GitWeb.',
+    repoUrl: 'GitHub repository URL', repoPlaceholder: 'https://github.com/owner/project',
+    submitProject: 'Submit project', invalidRepo: 'Please enter a valid github.com repository URL.',
+    projectShared: '✓ Project shared', openGithub: 'Open on GitHub',
+    roadmapEyebrow: "WHERE WE'RE GOING", roadmapHeading: 'Roadmap', now: 'now', next: 'next', later: 'later',
+    aboutEyebrow: 'WHY NEXUS', aboutHeading: "Software works better<br/>when it's shared.",
+    aboutStory: 'We make focused tools for people who care about craft, speed, and open collaboration. Our work lives in public—from the first sketch to the final release.',
+    aboutGithub: 'Meet us on GitHub', value1: 'Build openly', value1Text: 'Share the process, not just the result.',
+    value2: 'Ship thoughtfully', value2Text: 'Small, deliberate releases over noisy launches.',
+    value3: 'Welcome everyone', value3Text: 'Good ideas deserve an open door.',
+    newsletterEyebrow: 'STAY IN THE LOOP', newsletterHeading: 'Follow the build.',
+    email: 'Email address', emailPlaceholder: 'you@example.com', subscribe: 'Subscribe',
+    subscribed: "You're on the list. Thanks!", stayUpdated: 'STAY UPDATED',
+    notifyTitle: 'Wanna be notified?', notifyDescription: "Choose how you'd like to hear about new Nexus releases and updates.",
+    yesThanks: 'Yes, thanks', noThanks: 'No, thanks', thinkThanks: "I'll think about it, thanks",
+    footerGitHub: 'GitHub', builtWith: 'Built with React, TypeScript & Vite',
+  },
+  announcements: {
+    'nova-python': { title: 'NovaOS adds Python 3.15 support', summary: 'NovaOS now ships CPython 3.15.2 with arm64 runtimes, faster builds, and zero-config virtual environments.' },
+    'gitweb-live': { title: 'GitWeb is live', summary: 'Discover, browse, and contribute to every Nexus project from one focused, open-source workspace.' },
+  },
+  projects: {
+    NovaOS: { tagline: 'Python at the core.', description: 'A lightweight developer runtime for portable Python workloads across desktop and arm64 systems.' },
+    GitWeb: { tagline: 'Open source, beautifully indexed.', description: 'Fast repository discovery and project documentation for teams building in public.' },
+  },
+  roadmap: {
+    now: 'Repository search, RSS feeds, and faster project discovery.',
+    next: 'The next GitWeb release with improved discovery and project workflows.',
+    later: 'A newer GitWeb release focused on richer features and a refined experience.',
+  },
+};
+
+const translated: Record<Exclude<Locale, 'en'>, ContentCopy> = {
+  fr: {
+    ui: {
+      skip: 'Aller au contenu', home: 'Accueil Nexus GitWeb', nav: 'Navigation principale',
+      announcements: 'Actualités', projects: 'Projets', roadmap: 'Feuille de route', about: 'À propos',
+      github: 'GitHub', menu: 'Ouvrir ou fermer le menu', heroEyebrow: 'PLATEFORME DE DÉVELOPPEMENT OPEN SOURCE',
+      heroLine1: 'Construisez en public.', heroLine2: 'Lancez l’essentiel.',
+      heroDescription: 'Des outils pour les créateurs ambitieux. Découvrez nos projets, suivez les sorties et façonnez les logiciels de développement de demain.',
+      explore: 'Découvrir les projets', viewGithub: 'Voir sur GitHub', shareProject: 'Partager un projet',
+      statsProjects: 'Projets', statsUpdates: 'Actualités', statsOpen: 'Open source',
+      latestDrop: 'DERNIÈRE NOUVEAUTÉ', readReleaseNotes: 'Lire les notes de version',
+      fromLab: 'DU LABORATOIRE', announcementHeading: 'Actualités', filterLabel: 'Filtrer les actualités',
+      all: 'Tout', announcement: 'Annonce', release: 'Version', update: 'Mise à jour', event: 'Événement',
+      pinned: 'À la une', readAnnouncement: 'Lire', work: 'NOS PROJETS', projectHeading: 'Projets',
+      projectNote: 'Créés en public. Maintenus ensemble.', live: 'En ligne', beta: 'Bêta',
+      building: 'En cours', planned: 'Prévu', communityProjects: 'PROJETS DE LA COMMUNAUTÉ',
+      shareHeading: 'Partager un projet', shareDescription: 'Ajoutez un dépôt GitHub public à Nexus GitWeb.',
+      repoUrl: 'URL du dépôt GitHub', repoPlaceholder: 'https://github.com/propriétaire/projet',
+      submitProject: 'Envoyer le projet', invalidRepo: 'Saisissez une URL valide de dépôt github.com.',
+      projectShared: '✓ Projet partagé', openGithub: 'Ouvrir sur GitHub',
+      roadmapEyebrow: 'NOS PROCHAINES ÉTAPES', roadmapHeading: 'Feuille de route', now: 'maintenant', next: 'ensuite', later: 'plus tard',
+      aboutEyebrow: 'POURQUOI NEXUS', aboutHeading: 'Les logiciels sont meilleurs<br/>quand ils sont partagés.',
+      aboutStory: 'Nous créons des outils ciblés pour celles et ceux qui apprécient le savoir-faire, la rapidité et la collaboration ouverte. Notre travail est public, de la première esquisse à la sortie.',
+      aboutGithub: 'Retrouvez-nous sur GitHub', value1: 'Construire ouvertement', value1Text: 'Partager le processus, pas seulement le résultat.',
+      value2: 'Publier avec soin', value2Text: 'Des versions ciblées plutôt que des lancements bruyants.',
+      value3: 'Accueillir tout le monde', value3Text: 'Les bonnes idées méritent une porte ouverte.',
+      newsletterEyebrow: 'RESTEZ INFORMÉ', newsletterHeading: 'Suivez le projet.',
+      email: 'Adresse e-mail', emailPlaceholder: 'vous@exemple.com', subscribe: 'S’inscrire',
+      subscribed: 'Vous êtes inscrit·e. Merci !', stayUpdated: 'RESTEZ INFORMÉ',
+      notifyTitle: 'Souhaitez-vous recevoir des notifications ?', notifyDescription: 'Choisissez comment recevoir les nouvelles versions et actualités de Nexus.',
+      yesThanks: 'Oui, merci', noThanks: 'Non, merci', thinkThanks: 'Je vais y réfléchir, merci',
+      footerGitHub: 'GitHub', builtWith: 'Créé avec React, TypeScript et Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS prend en charge Python 3.15', summary: 'NovaOS inclut désormais CPython 3.15.2, des environnements arm64, des compilations plus rapides et des environnements virtuels sans configuration.' },
+      'gitweb-live': { title: 'GitWeb est en ligne', summary: 'Découvrez, explorez et contribuez à tous les projets Nexus depuis un espace open source simple et ciblé.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python au cœur du système.', description: 'Un environnement léger pour exécuter des charges Python portables sur ordinateur et arm64.' },
+      GitWeb: { tagline: 'L’open source, bien organisé.', description: 'Découvrez rapidement des dépôts et consultez la documentation des équipes qui développent en public.' },
+    },
+    roadmap: {
+      now: 'Recherche de dépôts, flux RSS et découverte de projets plus rapide.',
+      next: 'La prochaine version de GitWeb améliore la découverte et les flux de travail.',
+      later: 'Une version enrichie de GitWeb avec davantage de fonctionnalités et une expérience affinée.',
+    },
+  },
+  de: {
+    ui: {
+      skip: 'Zum Inhalt springen', home: 'Nexus GitWeb Startseite', nav: 'Hauptnavigation',
+      announcements: 'Neuigkeiten', projects: 'Projekte', roadmap: 'Roadmap', about: 'Über uns',
+      github: 'GitHub', menu: 'Menü umschalten', heroEyebrow: 'OPEN-SOURCE-ENTWICKLERPLATTFORM',
+      heroLine1: 'Offen entwickeln.', heroLine2: 'Wichtiges veröffentlichen.',
+      heroDescription: 'Werkzeuge für ambitionierte Entwickler. Entdecke unsere Arbeit, verfolge Releases und gestalte die nächste Generation von Entwickler-Software mit.',
+      explore: 'Projekte entdecken', viewGithub: 'Auf GitHub ansehen', shareProject: 'Projekt teilen',
+      statsProjects: 'Projekte', statsUpdates: 'Neuigkeiten', statsOpen: 'Open Source',
+      latestDrop: 'NEUESTE VERSION', readReleaseNotes: 'Versionshinweise lesen',
+      fromLab: 'AUS DEM LABOR', announcementHeading: 'Neuigkeiten', filterLabel: 'Neuigkeiten filtern',
+      all: 'Alle', announcement: 'Ankündigung', release: 'Release', update: 'Update', event: 'Event',
+      pinned: 'Angepinnt', readAnnouncement: 'Lesen', work: 'UNSERE ARBEIT', projectHeading: 'Projekte',
+      projectNote: 'Offen entwickelt. Gemeinsam gepflegt.', live: 'Live', beta: 'Beta',
+      building: 'In Arbeit', planned: 'Geplant', communityProjects: 'COMMUNITY-PROJEKTE',
+      shareHeading: 'Projekt teilen', shareDescription: 'Füge ein öffentliches GitHub-Repository zu Nexus GitWeb hinzu.',
+      repoUrl: 'GitHub-Repository-URL', repoPlaceholder: 'https://github.com/eigentümer/projekt',
+      submitProject: 'Projekt einreichen', invalidRepo: 'Bitte gib eine gültige github.com-Repository-URL ein.',
+      projectShared: '✓ Projekt geteilt', openGithub: 'Auf GitHub öffnen',
+      roadmapEyebrow: 'WIE ES WEITERGEHT', roadmapHeading: 'Roadmap', now: 'jetzt', next: 'als Nächstes', later: 'später',
+      aboutEyebrow: 'WARUM NEXUS', aboutHeading: 'Software ist besser,<br/>wenn man sie teilt.',
+      aboutStory: 'Wir entwickeln fokussierte Werkzeuge für Menschen, denen Qualität, Geschwindigkeit und offene Zusammenarbeit wichtig sind. Unsere Arbeit ist öffentlich – vom ersten Entwurf bis zum Release.',
+      aboutGithub: 'Triff uns auf GitHub', value1: 'Offen entwickeln', value1Text: 'Den Prozess teilen, nicht nur das Ergebnis.',
+      value2: 'Mit Bedacht veröffentlichen', value2Text: 'Kleine, gezielte Releases statt lauter Starts.',
+      value3: 'Alle willkommen heißen', value3Text: 'Gute Ideen verdienen offene Türen.',
+      newsletterEyebrow: 'BLEIB AUF DEM LAUFENDEN', newsletterHeading: 'Verfolge die Entwicklung.',
+      email: 'E-Mail-Adresse', emailPlaceholder: 'du@beispiel.de', subscribe: 'Abonnieren',
+      subscribed: 'Du bist angemeldet. Danke!', stayUpdated: 'BLEIB AUF DEM LAUFENDEN',
+      notifyTitle: 'Möchtest du benachrichtigt werden?', notifyDescription: 'Wähle, wie du von neuen Nexus-Releases und Neuigkeiten erfahren möchtest.',
+      yesThanks: 'Ja, danke', noThanks: 'Nein, danke', thinkThanks: 'Ich überlege es mir, danke',
+      footerGitHub: 'GitHub', builtWith: 'Erstellt mit React, TypeScript und Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS unterstützt jetzt Python 3.15', summary: 'NovaOS enthält jetzt CPython 3.15.2, arm64-Laufzeiten, schnellere Builds und virtuelle Umgebungen ohne Konfiguration.' },
+      'gitweb-live': { title: 'GitWeb ist live', summary: 'Entdecke, durchsuche und unterstütze alle Nexus-Projekte in einem fokussierten Open-Source-Arbeitsbereich.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python im Kern.', description: 'Eine schlanke Laufzeitumgebung für portable Python-Workloads auf Desktop und arm64.' },
+      GitWeb: { tagline: 'Open Source, übersichtlich organisiert.', description: 'Repositories schnell entdecken und Projektdokumentation von Teams ansehen, die offen entwickeln.' },
+    },
+    roadmap: {
+      now: 'Repository-Suche, RSS-Feeds und schnellere Projektentdeckung.',
+      next: 'Das nächste GitWeb-Release verbessert Entdeckung und Projektabläufe.',
+      later: 'Ein neueres GitWeb mit mehr Funktionen und einem verfeinerten Nutzungserlebnis.',
+    },
+  },
+  es: {
+    ui: {
+      skip: 'Saltar al contenido', home: 'Inicio de Nexus GitWeb', nav: 'Navegación principal',
+      announcements: 'Novedades', projects: 'Proyectos', roadmap: 'Hoja de ruta', about: 'Acerca de',
+      github: 'GitHub', menu: 'Abrir o cerrar menú', heroEyebrow: 'PLATAFORMA DE DESARROLLO DE CÓDIGO ABIERTO',
+      heroLine1: 'Construye en abierto.', heroLine2: 'Publica lo importante.',
+      heroDescription: 'Herramientas para creadores ambiciosos. Explora el trabajo, sigue los lanzamientos y ayuda a dar forma al futuro del software para desarrolladores.',
+      explore: 'Explorar proyectos', viewGithub: 'Ver en GitHub', shareProject: 'Compartir proyecto',
+      statsProjects: 'Proyectos', statsUpdates: 'Novedades', statsOpen: 'Código abierto',
+      latestDrop: 'ÚLTIMO LANZAMIENTO', readReleaseNotes: 'Leer notas de versión',
+      fromLab: 'DEL LABORATORIO', announcementHeading: 'Novedades', filterLabel: 'Filtrar novedades',
+      all: 'Todo', announcement: 'Anuncio', release: 'Versión', update: 'Actualización', event: 'Evento',
+      pinned: 'Destacado', readAnnouncement: 'Leer', work: 'EL TRABAJO', projectHeading: 'Proyectos',
+      projectNote: 'Creado en abierto. Mantenido en equipo.', live: 'Activo', beta: 'Beta',
+      building: 'En desarrollo', planned: 'Planeado', communityProjects: 'PROYECTOS DE LA COMUNIDAD',
+      shareHeading: 'Compartir proyecto', shareDescription: 'Añade un repositorio público de GitHub a Nexus GitWeb.',
+      repoUrl: 'URL del repositorio de GitHub', repoPlaceholder: 'https://github.com/propietario/proyecto',
+      submitProject: 'Enviar proyecto', invalidRepo: 'Introduce una URL válida de un repositorio de github.com.',
+      projectShared: '✓ Proyecto compartido', openGithub: 'Abrir en GitHub',
+      roadmapEyebrow: 'LO QUE VIENE', roadmapHeading: 'Hoja de ruta', now: 'ahora', next: 'después', later: 'más adelante',
+      aboutEyebrow: 'POR QUÉ NEXUS', aboutHeading: 'El software funciona mejor<br/>cuando se comparte.',
+      aboutStory: 'Creamos herramientas prácticas para quienes valoran el cuidado, la rapidez y la colaboración abierta. Nuestro trabajo es público, desde el primer boceto hasta el lanzamiento.',
+      aboutGithub: 'Conócenos en GitHub', value1: 'Crear en abierto', value1Text: 'Compartir el proceso, no solo el resultado.',
+      value2: 'Publicar con intención', value2Text: 'Lanzamientos pequeños y cuidados, sin ruido.',
+      value3: 'Dar la bienvenida a todos', value3Text: 'Las buenas ideas merecen una puerta abierta.',
+      newsletterEyebrow: 'MANTENTE AL DÍA', newsletterHeading: 'Sigue el desarrollo.',
+      email: 'Correo electrónico', emailPlaceholder: 'tu@ejemplo.com', subscribe: 'Suscribirse',
+      subscribed: 'Ya estás en la lista. ¡Gracias!', stayUpdated: 'MANTENTE AL DÍA',
+      notifyTitle: '¿Quieres recibir avisos?', notifyDescription: 'Elige cómo quieres enterarte de las nuevas versiones y novedades de Nexus.',
+      yesThanks: 'Sí, gracias', noThanks: 'No, gracias', thinkThanks: 'Me lo pensaré, gracias',
+      footerGitHub: 'GitHub', builtWith: 'Hecho con React, TypeScript y Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS añade compatibilidad con Python 3.15', summary: 'NovaOS incluye CPython 3.15.2, entornos arm64, compilaciones más rápidas y entornos virtuales sin configuración.' },
+      'gitweb-live': { title: 'GitWeb ya está disponible', summary: 'Descubre, explora y contribuye a todos los proyectos de Nexus desde un espacio de código abierto y sencillo.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python en el corazón.', description: 'Un entorno ligero para ejecutar cargas de Python portátiles en escritorio y arm64.' },
+      GitWeb: { tagline: 'Código abierto, bien organizado.', description: 'Encuentra repositorios rápidamente y consulta la documentación de equipos que trabajan en abierto.' },
+    },
+    roadmap: {
+      now: 'Búsqueda de repositorios, canales RSS y descubrimiento de proyectos más rápido.',
+      next: 'La próxima versión de GitWeb mejorará el descubrimiento y los flujos de trabajo.',
+      later: 'Una versión más completa de GitWeb con nuevas funciones y una experiencia mejorada.',
+    },
+  },
+  it: {
+    ui: {
+      skip: 'Vai al contenuto', home: 'Home Nexus GitWeb', nav: 'Navigazione principale',
+      announcements: 'Novità', projects: 'Progetti', roadmap: 'Roadmap', about: 'Chi siamo',
+      github: 'GitHub', menu: 'Apri o chiudi il menu', heroEyebrow: 'PIATTAFORMA OPEN SOURCE PER SVILUPPATORI',
+      heroLine1: 'Costruisci in pubblico.', heroLine2: 'Pubblica ciò che conta.',
+      heroDescription: 'Strumenti per chi costruisce con ambizione. Esplora i progetti, segui le release e contribuisci al futuro del software per sviluppatori.',
+      explore: 'Esplora i progetti', viewGithub: 'Vedi su GitHub', shareProject: 'Condividi progetto',
+      statsProjects: 'Progetti', statsUpdates: 'Novità', statsOpen: 'Open source',
+      latestDrop: 'ULTIMA NOVITÀ', readReleaseNotes: 'Leggi le note di rilascio',
+      fromLab: 'DAL LABORATORIO', announcementHeading: 'Novità', filterLabel: 'Filtra le novità',
+      all: 'Tutte', announcement: 'Annuncio', release: 'Release', update: 'Aggiornamento', event: 'Evento',
+      pinned: 'In evidenza', readAnnouncement: 'Leggi', work: 'IL NOSTRO LAVORO', projectHeading: 'Progetti',
+      projectNote: 'Creati in pubblico. Mantenuti insieme.', live: 'Attivo', beta: 'Beta',
+      building: 'In sviluppo', planned: 'Pianificato', communityProjects: 'PROGETTI DELLA COMMUNITY',
+      shareHeading: 'Condividi progetto', shareDescription: 'Aggiungi un repository GitHub pubblico a Nexus GitWeb.',
+      repoUrl: 'URL del repository GitHub', repoPlaceholder: 'https://github.com/proprietario/progetto',
+      submitProject: 'Invia progetto', invalidRepo: 'Inserisci un URL valido di un repository github.com.',
+      projectShared: '✓ Progetto condiviso', openGithub: 'Apri su GitHub',
+      roadmapEyebrow: 'I PROSSIMI PASSI', roadmapHeading: 'Roadmap', now: 'ora', next: 'prossimamente', later: 'più avanti',
+      aboutEyebrow: 'PERCHÉ NEXUS', aboutHeading: 'Il software funziona meglio<br/>quando è condiviso.',
+      aboutStory: 'Creiamo strumenti mirati per chi ha a cuore qualità, velocità e collaborazione aperta. Il nostro lavoro è pubblico, dalla prima idea alla release.',
+      aboutGithub: 'Vieni a trovarci su GitHub', value1: 'Costruire apertamente', value1Text: 'Condividere il percorso, non solo il risultato.',
+      value2: 'Pubblicare con cura', value2Text: 'Release piccole e ponderate, senza clamore.',
+      value3: 'Accogliere tutti', value3Text: 'Le buone idee meritano una porta aperta.',
+      newsletterEyebrow: 'RESTA AGGIORNATO', newsletterHeading: 'Segui lo sviluppo.',
+      email: 'Indirizzo email', emailPlaceholder: 'tu@esempio.it', subscribe: 'Iscriviti',
+      subscribed: 'Sei nella lista. Grazie!', stayUpdated: 'RESTA AGGIORNATO',
+      notifyTitle: 'Vuoi ricevere notifiche?', notifyDescription: 'Scegli come ricevere aggiornamenti sulle nuove release e novità di Nexus.',
+      yesThanks: 'Sì, grazie', noThanks: 'No, grazie', thinkThanks: 'Ci penserò, grazie',
+      footerGitHub: 'GitHub', builtWith: 'Realizzato con React, TypeScript e Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS aggiunge il supporto a Python 3.15', summary: 'NovaOS include CPython 3.15.2, runtime arm64, build più veloci e ambienti virtuali senza configurazione.' },
+      'gitweb-live': { title: 'GitWeb è online', summary: 'Scopri, esplora e contribuisci a tutti i progetti Nexus da un unico spazio open source essenziale.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python al centro.', description: 'Un runtime leggero per carichi di lavoro Python portabili su desktop e arm64.' },
+      GitWeb: { tagline: 'Open source, organizzato al meglio.', description: 'Trova repository e consulta la documentazione dei team che sviluppano in pubblico.' },
+    },
+    roadmap: {
+      now: 'Ricerca nei repository, feed RSS e scoperta dei progetti più rapida.',
+      next: 'La prossima release di GitWeb migliorerà la scoperta e i flussi di lavoro.',
+      later: 'Una nuova versione di GitWeb con più funzionalità ed esperienza rifinita.',
+    },
+  },
+  pl: {
+    ui: {
+      skip: 'Przejdź do treści', home: 'Strona główna Nexus GitWeb', nav: 'Nawigacja główna',
+      announcements: 'Aktualności', projects: 'Projekty', roadmap: 'Plan rozwoju', about: 'O nas',
+      github: 'GitHub', menu: 'Przełącz menu', heroEyebrow: 'PLATFORMA OPEN SOURCE DLA PROGRAMISTÓW',
+      heroLine1: 'Twórz otwarcie.', heroLine2: 'Wydawaj to, co ważne.',
+      heroDescription: 'Narzędzia dla ambitnych twórców. Odkrywaj projekty, śledź wydania i pomagaj kształtować przyszłość oprogramowania dla programistów.',
+      explore: 'Odkryj projekty', viewGithub: 'Zobacz na GitHubie', shareProject: 'Udostępnij projekt',
+      statsProjects: 'Projekty', statsUpdates: 'Aktualności', statsOpen: 'Open source',
+      latestDrop: 'NAJNOWSZE WYDANIE', readReleaseNotes: 'Czytaj informacje o wydaniu',
+      fromLab: 'Z LABORATORIUM', announcementHeading: 'Aktualności', filterLabel: 'Filtruj aktualności',
+      all: 'Wszystkie', announcement: 'Ogłoszenie', release: 'Wydanie', update: 'Aktualizacja', event: 'Wydarzenie',
+      pinned: 'Przypięte', readAnnouncement: 'Czytaj', work: 'NASZA PRACA', projectHeading: 'Projekty',
+      projectNote: 'Tworzone otwarcie. Rozwijane wspólnie.', live: 'Dostępny', beta: 'Beta',
+      building: 'W budowie', planned: 'Planowany', communityProjects: 'PROJEKTY SPOŁECZNOŚCI',
+      shareHeading: 'Udostępnij projekt', shareDescription: 'Dodaj publiczne repozytorium GitHub do Nexus GitWeb.',
+      repoUrl: 'Adres repozytorium GitHub', repoPlaceholder: 'https://github.com/właściciel/projekt',
+      submitProject: 'Prześlij projekt', invalidRepo: 'Wpisz prawidłowy adres repozytorium github.com.',
+      projectShared: '✓ Projekt udostępniony', openGithub: 'Otwórz na GitHubie',
+      roadmapEyebrow: 'CO PRZED NAMI', roadmapHeading: 'Plan rozwoju', now: 'teraz', next: 'następnie', later: 'później',
+      aboutEyebrow: 'DLACZEGO NEXUS', aboutHeading: 'Oprogramowanie działa lepiej,<br/>gdy się nim dzielimy.',
+      aboutStory: 'Tworzymy konkretne narzędzia dla osób, które cenią jakość, szybkość i otwartą współpracę. Nasza praca jest publiczna — od pierwszego szkicu po wydanie.',
+      aboutGithub: 'Poznaj nas na GitHubie', value1: 'Twórz otwarcie', value1Text: 'Dziel się procesem, nie tylko efektem.',
+      value2: 'Wydawaj świadomie', value2Text: 'Małe, przemyślane wydania zamiast szumu.',
+      value3: 'Witamy wszystkich', value3Text: 'Dobre pomysły zasługują na otwarte drzwi.',
+      newsletterEyebrow: 'BĄDŹ NA BIEŻĄCO', newsletterHeading: 'Śledź rozwój.',
+      email: 'Adres e-mail', emailPlaceholder: 'ty@przykład.pl', subscribe: 'Zapisz się',
+      subscribed: 'Jesteś na liście. Dziękujemy!', stayUpdated: 'BĄDŹ NA BIEŻĄCO',
+      notifyTitle: 'Chcesz otrzymywać powiadomienia?', notifyDescription: 'Wybierz, jak chcesz otrzymywać informacje o nowych wydaniach i aktualnościach Nexus.',
+      yesThanks: 'Tak, dziękuję', noThanks: 'Nie, dziękuję', thinkThanks: 'Zastanowię się, dziękuję',
+      footerGitHub: 'GitHub', builtWith: 'Stworzone w React, TypeScript i Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS dodaje obsługę Python 3.15', summary: 'NovaOS zawiera teraz CPython 3.15.2, środowiska arm64, szybsze kompilacje i wirtualne środowiska bez konfiguracji.' },
+      'gitweb-live': { title: 'GitWeb już działa', summary: 'Odkrywaj, przeglądaj i współtwórz wszystkie projekty Nexus w jednym przejrzystym środowisku open source.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python w samym centrum.', description: 'Lekki runtime dla przenośnych zadań Python na komputerach i arm64.' },
+      GitWeb: { tagline: 'Open source w dobrym porządku.', description: 'Szybko odkrywaj repozytoria i dokumentację zespołów działających otwarcie.' },
+    },
+    roadmap: {
+      now: 'Wyszukiwanie repozytoriów, kanały RSS i szybsze odkrywanie projektów.',
+      next: 'Kolejne wydanie GitWeb usprawni odkrywanie i przepływy pracy.',
+      later: 'Nowsza wersja GitWeb z dodatkowymi funkcjami i dopracowaną obsługą.',
+    },
+  },
+  nl: {
+    ui: {
+      skip: 'Ga naar inhoud', home: 'Nexus GitWeb-home', nav: 'Hoofdnavigatie',
+      announcements: 'Aankondigingen', projects: 'Projecten', roadmap: 'Roadmap', about: 'Over ons',
+      github: 'GitHub', menu: 'Menu openen of sluiten', heroEyebrow: 'OPEN-SOURCEPLATFORM VOOR DEVELOPERS',
+      heroLine1: 'Bouw in het openbaar.', heroLine2: 'Publiceer wat ertoe doet.',
+      heroDescription: 'Tools voor ambitieuze makers. Ontdek ons werk, volg releases en help mee aan de volgende generatie ontwikkelaarssoftware.',
+      explore: 'Projecten bekijken', viewGithub: 'Bekijk op GitHub', shareProject: 'Project delen',
+      statsProjects: 'Projecten', statsUpdates: 'Updates', statsOpen: 'Open source',
+      latestDrop: 'NIEUWSTE RELEASE', readReleaseNotes: 'Release notes lezen',
+      fromLab: 'UIT HET LAB', announcementHeading: 'Aankondigingen', filterLabel: 'Aankondigingen filteren',
+      all: 'Alles', announcement: 'Aankondiging', release: 'Release', update: 'Update', event: 'Evenement',
+      pinned: 'Vastgezet', readAnnouncement: 'Lezen', work: 'HET WERK', projectHeading: 'Projecten',
+      projectNote: 'Open gebouwd. Samen onderhouden.', live: 'Live', beta: 'Beta',
+      building: 'In ontwikkeling', planned: 'Gepland', communityProjects: 'COMMUNITYPROJECTEN',
+      shareHeading: 'Project delen', shareDescription: 'Voeg een openbare GitHub-repository toe aan Nexus GitWeb.',
+      repoUrl: 'GitHub-repository-URL', repoPlaceholder: 'https://github.com/eigenaar/project',
+      submitProject: 'Project indienen', invalidRepo: 'Voer een geldige github.com-repository-URL in.',
+      projectShared: '✓ Project gedeeld', openGithub: 'Openen op GitHub',
+      roadmapEyebrow: 'WAT KOMT ERAAN', roadmapHeading: 'Roadmap', now: 'nu', next: 'hierna', later: 'later',
+      aboutEyebrow: 'WAAROM NEXUS', aboutHeading: 'Software werkt beter<br/>als je het deelt.',
+      aboutStory: 'We maken gerichte tools voor mensen die waarde hechten aan vakmanschap, snelheid en open samenwerking. Ons werk is openbaar, van de eerste schets tot de release.',
+      aboutGithub: 'Ontmoet ons op GitHub', value1: 'Open bouwen', value1Text: 'Deel het proces, niet alleen het resultaat.',
+      value2: 'Doordacht releasen', value2Text: 'Kleine, bewuste releases zonder lawaai.',
+      value3: 'Iedereen welkom', value3Text: 'Goede ideeën verdienen een open deur.',
+      newsletterEyebrow: 'BLIJF OP DE HOOGTE', newsletterHeading: 'Volg de ontwikkeling.',
+      email: 'E-mailadres', emailPlaceholder: 'jij@voorbeeld.nl', subscribe: 'Abonneren',
+      subscribed: 'Je staat op de lijst. Bedankt!', stayUpdated: 'BLIJF OP DE HOOGTE',
+      notifyTitle: 'Wil je meldingen ontvangen?', notifyDescription: 'Kies hoe je op de hoogte wilt blijven van nieuwe Nexus-releases en updates.',
+      yesThanks: 'Ja, bedankt', noThanks: 'Nee, bedankt', thinkThanks: 'Ik denk erover na, bedankt',
+      footerGitHub: 'GitHub', builtWith: 'Gebouwd met React, TypeScript en Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS voegt ondersteuning voor Python 3.15 toe', summary: 'NovaOS bevat nu CPython 3.15.2, arm64-runtimes, snellere builds en virtuele omgevingen zonder configuratie.' },
+      'gitweb-live': { title: 'GitWeb is live', summary: 'Ontdek, doorzoek en draag bij aan alle Nexus-projecten vanuit één overzichtelijke open-sourceplek.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python als basis.', description: 'Een lichte runtime voor draagbare Python-workloads op desktop en arm64.' },
+      GitWeb: { tagline: 'Open source, overzichtelijk geïndexeerd.', description: 'Vind repositories snel en bekijk projectdocumentatie van teams die open bouwen.' },
+    },
+    roadmap: {
+      now: 'Repository zoeken, RSS-feeds en projecten sneller ontdekken.',
+      next: 'De volgende GitWeb-release verbetert ontdekking en projectworkflows.',
+      later: 'Een nieuwere GitWeb-versie met meer functies en een verfijnde ervaring.',
+    },
+  },
+  pt: {
+    ui: {
+      skip: 'Ir para o conteúdo', home: 'Página inicial do Nexus GitWeb', nav: 'Navegação principal',
+      announcements: 'Novidades', projects: 'Projetos', roadmap: 'Roteiro', about: 'Sobre',
+      github: 'GitHub', menu: 'Abrir ou fechar menu', heroEyebrow: 'PLATAFORMA OPEN SOURCE PARA PROGRAMADORES',
+      heroLine1: 'Construa em público.', heroLine2: 'Lance o que importa.',
+      heroDescription: 'Ferramentas para criadores ambiciosos. Explore o trabalho, acompanhe os lançamentos e ajude a moldar a próxima geração de software para programadores.',
+      explore: 'Explorar projetos', viewGithub: 'Ver no GitHub', shareProject: 'Partilhar projeto',
+      statsProjects: 'Projetos', statsUpdates: 'Novidades', statsOpen: 'Open source',
+      latestDrop: 'LANÇAMENTO MAIS RECENTE', readReleaseNotes: 'Ler notas de lançamento',
+      fromLab: 'DO LABORATÓRIO', announcementHeading: 'Novidades', filterLabel: 'Filtrar novidades',
+      all: 'Todas', announcement: 'Anúncio', release: 'Lançamento', update: 'Atualização', event: 'Evento',
+      pinned: 'Em destaque', readAnnouncement: 'Ler', work: 'O TRABALHO', projectHeading: 'Projetos',
+      projectNote: 'Criados em público. Mantidos em conjunto.', live: 'Ativo', beta: 'Beta',
+      building: 'Em desenvolvimento', planned: 'Planeado', communityProjects: 'PROJETOS DA COMUNIDADE',
+      shareHeading: 'Partilhar projeto', shareDescription: 'Adicione um repositório público do GitHub ao Nexus GitWeb.',
+      repoUrl: 'URL do repositório GitHub', repoPlaceholder: 'https://github.com/proprietario/projeto',
+      submitProject: 'Enviar projeto', invalidRepo: 'Introduza um URL válido de um repositório github.com.',
+      projectShared: '✓ Projeto partilhado', openGithub: 'Abrir no GitHub',
+      roadmapEyebrow: 'O QUE VEM A SEGUIR', roadmapHeading: 'Roteiro', now: 'agora', next: 'a seguir', later: 'mais tarde',
+      aboutEyebrow: 'PORQUÊ NEXUS', aboutHeading: 'O software funciona melhor<br/>quando é partilhado.',
+      aboutStory: 'Criamos ferramentas focadas para quem valoriza qualidade, rapidez e colaboração aberta. O nosso trabalho é público, do primeiro esboço ao lançamento.',
+      aboutGithub: 'Encontre-nos no GitHub', value1: 'Construir abertamente', value1Text: 'Partilhar o processo, não apenas o resultado.',
+      value2: 'Lançar com cuidado', value2Text: 'Lançamentos pequenos e ponderados, sem ruído.',
+      value3: 'Todos são bem-vindos', value3Text: 'Boas ideias merecem uma porta aberta.',
+      newsletterEyebrow: 'FIQUE A PAR', newsletterHeading: 'Acompanhe o desenvolvimento.',
+      email: 'Endereço de e-mail', emailPlaceholder: 'voce@exemplo.pt', subscribe: 'Subscrever',
+      subscribed: 'Já está na lista. Obrigado!', stayUpdated: 'FIQUE A PAR',
+      notifyTitle: 'Quer receber notificações?', notifyDescription: 'Escolha como quer saber das novas versões e novidades do Nexus.',
+      yesThanks: 'Sim, obrigado', noThanks: 'Não, obrigado', thinkThanks: 'Vou pensar, obrigado',
+      footerGitHub: 'GitHub', builtWith: 'Criado com React, TypeScript e Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS adiciona suporte para Python 3.15', summary: 'O NovaOS inclui agora CPython 3.15.2, ambientes arm64, compilações mais rápidas e ambientes virtuais sem configuração.' },
+      'gitweb-live': { title: 'O GitWeb está disponível', summary: 'Descubra, explore e contribua para todos os projetos Nexus num espaço open source simples e focado.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python no centro.', description: 'Um runtime leve para cargas Python portáteis em desktop e arm64.' },
+      GitWeb: { tagline: 'Open source, bem organizado.', description: 'Descubra repositórios rapidamente e consulte documentação de equipas que desenvolvem em público.' },
+    },
+    roadmap: {
+      now: 'Pesquisa de repositórios, feeds RSS e descoberta de projetos mais rápida.',
+      next: 'A próxima versão do GitWeb melhora a descoberta e os fluxos de trabalho.',
+      later: 'Uma versão mais recente do GitWeb, com mais funcionalidades e uma experiência refinada.',
+    },
+  },
+  cs: {
+    ui: {
+      skip: 'Přejít k obsahu', home: 'Domovská stránka Nexus GitWeb', nav: 'Hlavní navigace',
+      announcements: 'Novinky', projects: 'Projekty', roadmap: 'Plán vývoje', about: 'O nás',
+      github: 'GitHub', menu: 'Přepnout nabídku', heroEyebrow: 'OPEN-SOURCE PLATFORMA PRO VÝVOJÁŘE',
+      heroLine1: 'Vyvíjejte otevřeně.', heroLine2: 'Vydávejte to důležité.',
+      heroDescription: 'Nástroje pro ambiciózní tvůrce. Prozkoumejte projekty, sledujte vydání a pomozte utvářet další generaci vývojářského softwaru.',
+      explore: 'Prozkoumat projekty', viewGithub: 'Zobrazit na GitHubu', shareProject: 'Sdílet projekt',
+      statsProjects: 'Projekty', statsUpdates: 'Novinky', statsOpen: 'Open source',
+      latestDrop: 'NEJNOVĚJŠÍ VYDÁNÍ', readReleaseNotes: 'Přečíst poznámky k vydání',
+      fromLab: 'Z LABORATOŘE', announcementHeading: 'Novinky', filterLabel: 'Filtrovat novinky',
+      all: 'Vše', announcement: 'Oznámení', release: 'Vydání', update: 'Aktualizace', event: 'Událost',
+      pinned: 'Připnuto', readAnnouncement: 'Číst', work: 'NAŠE PRÁCE', projectHeading: 'Projekty',
+      projectNote: 'Vyvíjeno veřejně. Udržováno společně.', live: 'Aktivní', beta: 'Beta',
+      building: 'Ve vývoji', planned: 'Plánováno', communityProjects: 'KOMUNITNÍ PROJEKTY',
+      shareHeading: 'Sdílet projekt', shareDescription: 'Přidejte veřejný repozitář GitHub do Nexus GitWeb.',
+      repoUrl: 'URL repozitáře GitHub', repoPlaceholder: 'https://github.com/vlastnik/projekt',
+      submitProject: 'Odeslat projekt', invalidRepo: 'Zadejte platnou URL repozitáře github.com.',
+      projectShared: '✓ Projekt sdílen', openGithub: 'Otevřít na GitHubu',
+      roadmapEyebrow: 'CO NÁS ČEKÁ', roadmapHeading: 'Plán vývoje', now: 'nyní', next: 'dále', later: 'později',
+      aboutEyebrow: 'PROČ NEXUS', aboutHeading: 'Software funguje lépe,<br/>když se sdílí.',
+      aboutStory: 'Vytváříme nástroje pro lidi, kterým záleží na kvalitě, rychlosti a otevřené spolupráci. Naše práce je veřejná od prvního návrhu až po vydání.',
+      aboutGithub: 'Poznejte nás na GitHubu', value1: 'Vyvíjet otevřeně', value1Text: 'Sdílet proces, nejen výsledek.',
+      value2: 'Vydávat promyšleně', value2Text: 'Malá promyšlená vydání místo velkého hluku.',
+      value3: 'Vítat všechny', value3Text: 'Dobré nápady si zaslouží otevřené dveře.',
+      newsletterEyebrow: 'ZŮSTAŇTE V OBRAZE', newsletterHeading: 'Sledujte vývoj.',
+      email: 'E-mailová adresa', emailPlaceholder: 'vy@priklad.cz', subscribe: 'Odebírat',
+      subscribed: 'Jste na seznamu. Děkujeme!', stayUpdated: 'ZŮSTAŇTE V OBRAZE',
+      notifyTitle: 'Chcete dostávat upozornění?', notifyDescription: 'Vyberte, jak chcete dostávat informace o nových vydáních a novinkách Nexus.',
+      yesThanks: 'Ano, děkuji', noThanks: 'Ne, děkuji', thinkThanks: 'Ještě si to rozmyslím, děkuji',
+      footerGitHub: 'GitHub', builtWith: 'Vytvořeno pomocí Reactu, TypeScriptu a Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS přidává podporu Pythonu 3.15', summary: 'NovaOS nyní obsahuje CPython 3.15.2, běhová prostředí arm64, rychlejší sestavení a virtuální prostředí bez konfigurace.' },
+      'gitweb-live': { title: 'GitWeb je online', summary: 'Objevujte, procházejte a rozvíjejte všechny projekty Nexus v přehledném open-source prostředí.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python v samotném jádru.', description: 'Lehké běhové prostředí pro přenosné úlohy Pythonu na desktopu a arm64.' },
+      GitWeb: { tagline: 'Open source přehledně uspořádaný.', description: 'Rychle objevujte repozitáře a dokumentaci týmů, které vyvíjejí otevřeně.' },
+    },
+    roadmap: {
+      now: 'Vyhledávání repozitářů, RSS kanály a rychlejší objevování projektů.',
+      next: 'Další vydání GitWebu vylepší objevování a pracovní postupy.',
+      later: 'Novější GitWeb s dalšími funkcemi a propracovanějším prostředím.',
+    },
+  },
+  ro: {
+    ui: {
+      skip: 'Sari la conținut', home: 'Pagina principală Nexus GitWeb', nav: 'Navigare principală',
+      announcements: 'Anunțuri', projects: 'Proiecte', roadmap: 'Plan de dezvoltare', about: 'Despre',
+      github: 'GitHub', menu: 'Comută meniul', heroEyebrow: 'PLATFORMĂ OPEN SOURCE PENTRU DEZVOLTATORI',
+      heroLine1: 'Construiește la vedere.', heroLine2: 'Lansează ce contează.',
+      heroDescription: 'Instrumente pentru creatori ambițioși. Explorează proiectele, urmărește lansările și contribuie la viitorul software-ului pentru dezvoltatori.',
+      explore: 'Explorează proiectele', viewGithub: 'Vezi pe GitHub', shareProject: 'Distribuie proiectul',
+      statsProjects: 'Proiecte', statsUpdates: 'Noutăți', statsOpen: 'Open source',
+      latestDrop: 'CEA MAI NOUĂ LANSARE', readReleaseNotes: 'Citește notele lansării',
+      fromLab: 'DIN LABORATOR', announcementHeading: 'Anunțuri', filterLabel: 'Filtrează anunțurile',
+      all: 'Toate', announcement: 'Anunț', release: 'Lansare', update: 'Actualizare', event: 'Eveniment',
+      pinned: 'Fixat', readAnnouncement: 'Citește', work: 'MUNCA NOASTRĂ', projectHeading: 'Proiecte',
+      projectNote: 'Construite public. Întreținute împreună.', live: 'Activ', beta: 'Beta',
+      building: 'În lucru', planned: 'Planificat', communityProjects: 'PROIECTE ALE COMUNITĂȚII',
+      shareHeading: 'Distribuie proiectul', shareDescription: 'Adaugă un depozit public GitHub în Nexus GitWeb.',
+      repoUrl: 'Adresa depozitului GitHub', repoPlaceholder: 'https://github.com/proprietar/proiect',
+      submitProject: 'Trimite proiectul', invalidRepo: 'Introdu o adresă validă de depozit github.com.',
+      projectShared: '✓ Proiect distribuit', openGithub: 'Deschide pe GitHub',
+      roadmapEyebrow: 'CE URMEAZĂ', roadmapHeading: 'Plan de dezvoltare', now: 'acum', next: 'următorul', later: 'mai târziu',
+      aboutEyebrow: 'DE CE NEXUS', aboutHeading: 'Software-ul funcționează mai bine<br/>când este împărtășit.',
+      aboutStory: 'Creăm instrumente specializate pentru cei care apreciază calitatea, viteza și colaborarea deschisă. Munca noastră este publică, de la prima schiță până la lansare.',
+      aboutGithub: 'Ne găsești pe GitHub', value1: 'Construim deschis', value1Text: 'Împărtășim procesul, nu doar rezultatul.',
+      value2: 'Lansăm cu grijă', value2Text: 'Lansări mici și deliberate, fără zgomot.',
+      value3: 'Toată lumea e binevenită', value3Text: 'Ideile bune merită o ușă deschisă.',
+      newsletterEyebrow: 'RĂMÂI LA CURENT', newsletterHeading: 'Urmărește dezvoltarea.',
+      email: 'Adresă de e-mail', emailPlaceholder: 'tu@exemplu.ro', subscribe: 'Abonează-te',
+      subscribed: 'Ești pe listă. Mulțumim!', stayUpdated: 'RĂMÂI LA CURENT',
+      notifyTitle: 'Vrei să primești notificări?', notifyDescription: 'Alege cum vrei să afli despre noile lansări și noutăți Nexus.',
+      yesThanks: 'Da, mulțumesc', noThanks: 'Nu, mulțumesc', thinkThanks: 'Mă mai gândesc, mulțumesc',
+      footerGitHub: 'GitHub', builtWith: 'Creat cu React, TypeScript și Vite',
+    },
+    announcements: {
+      'nova-python': { title: 'NovaOS adaugă suport pentru Python 3.15', summary: 'NovaOS include acum CPython 3.15.2, medii arm64, compilări mai rapide și medii virtuale fără configurare.' },
+      'gitweb-live': { title: 'GitWeb este disponibil', summary: 'Descoperă, explorează și contribuie la toate proiectele Nexus dintr-un spațiu open source simplu și concentrat.' },
+    },
+    projects: {
+      NovaOS: { tagline: 'Python în centrul sistemului.', description: 'Un runtime ușor pentru sarcini Python portabile pe desktop și arm64.' },
+      GitWeb: { tagline: 'Open source, organizat clar.', description: 'Descoperă rapid depozite și documentația echipelor care construiesc public.' },
+    },
+    roadmap: {
+      now: 'Căutare în depozite, fluxuri RSS și descoperirea mai rapidă a proiectelor.',
+      next: 'Următoarea versiune GitWeb îmbunătățește descoperirea și fluxurile de lucru.',
+      later: 'O versiune GitWeb mai nouă, cu funcții extinse și o experiență rafinată.',
+    },
+  },
+};
+
+const localeCodes = Object.keys(locales) as Locale[];
+
+function getStoredLocale(): Locale {
+  const saved = localStorage.getItem('nexus-language');
+  if (saved && localeCodes.includes(saved as Locale)) return saved as Locale;
+  const browserLocale = navigator.language.slice(0, 2) as Locale;
+  return localeCodes.includes(browserLocale) ? browserLocale : 'en';
+}
+
+type I18nValue = {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  t: (key: string) => string;
+  announcement: (id: string, field: 'title' | 'summary') => string | undefined;
+  project: (name: string, field: 'tagline' | 'description') => string | undefined;
+  roadmap: (phase: string) => string | undefined;
+};
+
+const I18nContext = createContext<I18nValue | null>(null);
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [locale, setLocale] = useState<Locale>(getStoredLocale);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    localStorage.setItem('nexus-language', locale);
+  }, [locale]);
+
+  const value = useMemo<I18nValue>(() => {
+    const content = locale === 'en' ? en : translated[locale];
+    return {
+      locale,
+      setLocale,
+      t: (key) => content.ui[key] ?? en.ui[key] ?? key,
+      announcement: (id, field) => content.announcements[id]?.[field],
+      project: (name, field) => content.projects[name]?.[field],
+      roadmap: (phase) => content.roadmap[phase],
+    };
+  }, [locale]);
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+}
+
+export function useI18n() {
+  const value = useContext(I18nContext);
+  if (!value) throw new Error('useI18n must be used within I18nProvider');
+  return value;
+}
